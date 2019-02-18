@@ -23,18 +23,21 @@ export default class {
   }
 
   async load(record) {
-    
+
+    let timeout;
+
     return new Promise((resolve, reject) => {
       const eventHandler = (message) => {
         if (message.data[0] === events.RECORD_LOADED) {
           this.worker.removeEventListener('message', eventHandler);
+          window.clearTimeout(timeout);
           resolve();
         }
       }
     
       this.worker.addEventListener('message', eventHandler);
       this.worker.postMessage([events.LOAD_RECORD, record]);
-      window.setTimeout(() => {
+      timeout = window.setTimeout(() => {
         this.worker.removeEventListener('message', eventHandler);
         reject()
       },3000);
