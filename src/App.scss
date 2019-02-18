@@ -1,0 +1,44 @@
+.App {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+
+
+  div.info-screen-wrapper {
+    flex-grow: 1;
+  }
+
+  div.keyboard-wrapper {
+    margin: auto;
+    position:relative;
+
+    div.loading-overlay {
+      height: 100%;
+      width:100%;
+      position: absolute;
+      z-index: 10;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.flash {
+  animation: flash-animation 1s steps(5, start) infinite;
+  -webkit-animation: flash-animation 1s steps(5, start) infinite;
+}
+@keyframes flash-animation {
+  to {
+    visibility: hidden;
+  }
+}
+@-webkit-keyframes flash-animation {
+  to {
+    visibility: hidden;
+  }
+}

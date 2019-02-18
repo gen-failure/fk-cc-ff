@@ -1,0 +1,112 @@
+import {cloneDeep} from 'lodash';
+import eventTypes from './event-types';
+
+let eventsBuffer = [];
+let isRecording = false;
+let isPlaying = false
+let recordingStartTime;
+let playbackPosition = 0;
+let playbackInterval = null;
+
+const clear =() => {
+  eventsBuffer = [];
+  self.postMessage([eventTypes.CLEARED]);
+}
+
+const startRecording = () => {
+  eventsBuffer = [];
+  isRecording = true;
+  recordingStartTime = performance.now();
+}
+
+const stopRecording = () => {
+  isRecording = false;
+  self.postMessage([eventTypes.RECORD_READY, eventsBuffer])
+}
+
+const startPlaying = () => {
+  isPlaying = true;
+  playbackPosition = 0;
+
+  const buffer = cloneDeep(eventsBuffer);
+  let lastExecutionFinished = performance.now();
+  self.postMessage([eventTypes.PLAYING_STARTED]);
+  playbackInterval = self.setInterval(() => {
+    playbackPosition += performance.now()-lastExecutionFinished;
+    for (let i in buffer) {
+      let event = buffer[i];
+      if (event[0] >= playbackPosition) {
+        break;
+      }
+      switch(event[1]) {
+        case eventTypes.NOTE_ON:
+        case eventTypes.NOTE_OFF:
+          self.postMessage([event[1], event[2]]);
+          break;
+      }
+      buffer.splice(i,1);
+    }
+    if (buffer.length === 0 || isPlaying === false) {
+      self.postMessage([eventTypes.PLAYING_STOPPED]);
+      self.clearInterval(playbackInterval);
+        isPlaying = false;
+    }
+    lastExecutionFinished = performance.now();
+  },5);
+}
+
+const stopPlaying = () => {
+  isPlaying = false;
+}
+
+const noteOn = (noteNumber) => {
+  eventsBuffer.push([
+    performance.now()-recordingStartTime,
+    eventTypes.NOTE_ON,
+    noteNumber
+  ]);
+}
+
+const noteOff = (noteNumber) => {
+  eventsBuffer.push([
+    performance.now()-recordingStartTime,
+    eventTypes.NOTE_OFF,
+    noteNumber
+  ]);
+}
+
+const loadSong = (buffer) => {
+  isRecording = false;
+  eventsBuffer = buffer;
+}
+
+
+self.addEventListener('message', (message) => {
+  const eventType = message.data.shift();
+  const eventData = message.data;
+
+  switch(eventType) {
+    case eventTypes.START_RECORDING:
+      startRecording();
+      break;
+    case eventTypes.STOP_RECORDING:
+      stopRecording();
+      break;
+    case eventTypes.START_PLAYING:
+      startPlaying();
+      break;
+    case eventTypes.STOP_PLAYING:
+      stopPlaying();
+      break;
+    case eventTypes.START_RECORDING:
+      break;
+    case eventTypes.NOTE_ON:
+      noteOn(eventData[0])
+      break;
+    case eventTypes.note_OFF:
+      noteOff(eventData[0])
+      break;
+    case eventTypes.LOAD_SONG:
+      loadSong(eventData[0]);
+  }
+});
