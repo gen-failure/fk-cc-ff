@@ -13,6 +13,8 @@ class Library extends React.Component {
         <ModalBody>
           {this.props.storage.updatingRecords && <div style={{textAlign:'center'}}><Spinner style={{ width: '3rem', height: '3rem' }} /></div>} 
           {!this.props.storage.updatingRecords && this.props.storage.updatingRecordsFailed && <Alert color="danger">Connection to library failed</Alert>}
+          {
+            !this.props.storage.updatingRecords && this.props.storage.records.length === 0 && <Alert color="warning">Your library is empty</Alert>}
           {!this.props.storage.updatingRecords && this.props.storage.records.length > 0 && !this.props.storage.updatingRecordsFailed &&
               <ListGroup>
                 {this.props.storage.records.map((record) => {
